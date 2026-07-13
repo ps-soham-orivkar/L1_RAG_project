@@ -36,9 +36,14 @@ def chat_with_agent(message, history):
     History is a list of [user_message, bot_message] lists or Gradio messages dict.
     """
     # 1. Fast tool check
-    tool_response = route_query_to_tool(message)
+    tool_response = route_query_to_tool(message, retriever)
     if tool_response:
-        yield tool_response
+        import types
+        if isinstance(tool_response, types.GeneratorType):
+            for chunk in tool_response:
+                yield chunk
+        else:
+            yield tool_response
         return
         
     # 2. Format history

@@ -40,7 +40,7 @@ class HybridRetriever:
         tokenized_corpus = [doc.page_content.split(" ") for doc in self.documents]
         self.bm25 = BM25Okapi(tokenized_corpus)
         
-    def retrieve(self, query, top_k=4):
+    def retrieve(self, query, top_k=10):
         """
         Step 7: Hybrid retrieval logic.
         Combines semantic search and keyword search.
