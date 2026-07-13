@@ -2,7 +2,7 @@
 import gradio as gr
 from chatbot import generate_rag_response
 from tools import route_query_to_tool
-from data_processor import load_uploaded_document, chunk_documents
+from data_processor import load_documents_from_directory, chunk_documents
 from retriever import HybridRetriever
 import os
 import shutil
@@ -21,7 +21,6 @@ retriever = HybridRetriever(persist_directory=CHROMA_DIR)
 
 def init_knowledge_base():
     """Load preloaded documents from the data directory on startup."""
-    from data_processor import load_documents_from_directory
     docs = load_documents_from_directory("data")
     if docs:
         chunks = chunk_documents(docs)

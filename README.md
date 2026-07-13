@@ -1,13 +1,13 @@
 # University Policy Assistant using Hybrid RAG with Citations
 
 ## Overview
-A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmented Generation (RAG) architecture. It combines semantic search (ChromaDB) and keyword search (BM25) to provide accurate answers to university policy-related queries. It uses the local Mistral model via Ollama for privacy and speed, and includes an MCP tool layer for basic tasks like attendance calculations. It also features a citation system to trace answers back to original documents.
+A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmented Generation (RAG) architecture. It combines semantic search (ChromaDB) and keyword search (BM25) to provide accurate answers to university policy-related queries. It uses the local Qwen2.5 (3B) model via Ollama for privacy and speed, and includes an MCP tool layer for basic tasks like attendance calculations. It also features a citation system to trace answers back to original documents.
 
 ## Features
 * **PDF Document Processing:** Automatically loads PDFs from a preloaded directory and allows users to upload their own via the UI.
 * **Text Chunking & Metadata:** Splits documents into 500-800 token chunks while preserving source and page metadata.
 * **Hybrid RAG Retrieval:** Uses both vector similarity (ChromaDB + MiniLM) and keyword search (BM25) to find the most relevant context.
-* **LLM Integration:** Connects to a local Ollama instance running Mistral to generate grounded responses.
+* **LLM Integration:** Connects to a local Ollama instance running Qwen2.5 (3B) to generate grounded responses.
 * **Citation System:** Outputs the source document name and page number alongside generated answers.
 * **MCP Tool Layer:** Includes basic python-based tools to "calculate attendance" and "check eligibility".
 * **Streamlit UI:** Clean, interactive chat interface.
@@ -19,7 +19,7 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
 * **Embeddings:** MiniLM (sentence-transformers/all-MiniLM-L6-v2)
 * **Vector DB:** ChromaDB (Local)
 * **Keyword Search:** BM25 (rank_bm25)
-* **LLM:** Ollama (Mistral)
+* **LLM:** Ollama (qwen2.5:3b)
 * **Data Processing:** PyPDFLoader
 * **MCP:** Python logic (custom)
 
@@ -32,9 +32,9 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
    ```
 2. **Install Ollama:**
    Download and install [Ollama](https://ollama.com/) for your operating system.
-3. **Pull Mistral Model:**
+3. **Pull Qwen Model:**
    ```bash
-   ollama pull mistral
+   ollama pull qwen2.5:3b
    ```
 
 ## Usage
@@ -71,4 +71,4 @@ In this project, we use **Hybrid RAG**, which combines two lookup methods to get
 1. **Semantic Search (Vector Embeddings):** The system understands the "meaning" of your question and matches it to the underlying meaning of text chunks using mathematical vectors.
 2. **Keyword Search (BM25):** The system looks for exact word matches (like specific acronyms or policy codes) in the text.
 
-By combining these two methods, the assistant can find the right policy section even if you use different wording, while still accurately catching precise policy names or keywords. The retrieved sections are then passed to the local LLM (Mistral) to formulate a natural, easy-to-read answer complete with citations!
+By combining these two methods, the assistant can find the right policy section even if you use different wording, while still accurately catching precise policy names or keywords. The retrieved sections are then passed to the local LLM (Qwen2.5) to formulate a natural, easy-to-read answer complete with citations!

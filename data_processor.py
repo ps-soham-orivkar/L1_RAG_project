@@ -2,7 +2,6 @@
 # Handles document loading, text chunking, and metadata extraction.
 
 import os
-import tempfile
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -26,28 +25,6 @@ def load_documents_from_directory(directory_path="data"):
                 doc.metadata['source_name'] = filename
             documents.extend(docs)
     return documents
-
-def load_uploaded_document(uploaded_file):
-    """
-    Saves an uploaded Streamlit file to a temporary file and loads it using PyPDFLoader.
-    Returns a list of LangChain Document objects.
-    """
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-        temp_file.write(uploaded_file.getvalue())
-        temp_file_path = temp_file.name
-
-    try:
-        loader = PyMuPDFLoader(temp_file_path)
-        docs = loader.load()
-        # Add metadata
-        for doc in docs:
-            doc.metadata['source_name'] = uploaded_file.name
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-            
-    return docs
 
 def chunk_documents(documents, chunk_size=800, chunk_overlap=100):
     """
