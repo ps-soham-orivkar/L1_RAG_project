@@ -10,17 +10,17 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
 * **LLM Integration:** Connects to a local Ollama instance running Qwen2.5 (3B) to generate grounded responses.
 * **Citation System:** Outputs the source document name and page number alongside generated answers.
 * **MCP Tool Layer:** Includes basic python-based tools to "calculate attendance" and "check eligibility".
-* **Streamlit UI:** Clean, interactive chat interface.
+* **Gradio UI:** Clean, interactive chat interface.
 
 ## Tech Stack
-* **UI:** Streamlit
+* **UI:** Gradio
 * **Backend:** Python
 * **Framework:** LangChain
 * **Embeddings:** MiniLM (sentence-transformers/all-MiniLM-L6-v2)
 * **Vector DB:** ChromaDB (Local)
 * **Keyword Search:** BM25 (rank_bm25)
 * **LLM:** Ollama (qwen2.5:3b)
-* **Data Processing:** PyPDFLoader
+* **Data Processing:** PyMuPDFLoader (pymupdf)
 * **MCP:** Python logic (custom)
 
 ## Installation
@@ -43,7 +43,7 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
    Place your university policy PDF files in the `data/` folder before starting the application.
 2. **Run the App:**
    ```bash
-   streamlit run app.py
+   python app.py
    ```
 3. **Interact:**
    * Ask questions in the chat interface.
@@ -53,7 +53,7 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
 ## Project Structure
 ```text
 L1RAG/
-├── app.py                 # Streamlit UI and main entry point
+├── app.py                 # Gradio UI and main entry point
 ├── chatbot.py             # LLM prompt generation and citation extraction
 ├── data_processor.py      # PDF loading, chunking, and metadata handling
 ├── retriever.py           # Embeddings, ChromaDB, and Hybrid BM25 Search

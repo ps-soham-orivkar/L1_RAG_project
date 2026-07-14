@@ -31,3 +31,6 @@ desktop.ini
 # Temp files
 *.tmp
 *.log
+
+ # Data directory
+data/*.pdf
