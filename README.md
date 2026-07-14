@@ -48,7 +48,6 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
 3. **Interact:**
    * Ask questions in the chat interface.
    * Upload additional PDF documents using the sidebar.
-   * Use tools by typing commands like `calculate attendance 40 30` or `check eligibility 80`.
 
 ## Project Structure
 ```text
@@ -61,7 +60,6 @@ L1RAG/
 ├── requirements.txt       # Dependencies
 ├── README.md              # Project documentation
 └── data/                  # Directory for preloaded PDF policies
-    └── .gitkeep
 ```
 
 ## Explanation of Hybrid RAG

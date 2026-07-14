@@ -87,7 +87,7 @@ def process_uploaded_pdf(file_path):
 # Build the Gradio UI Layout
 with gr.Blocks(title="🎓 University Policy Assistant") as demo:
     gr.Markdown("# 🎓 University Policy Assistant")
-    gr.Markdown("Ask me anything about university policies or use my tools (e.g., 'calculate attendance 40 30' or 'check eligibility 80').")
+    gr.Markdown("Ask me anything about university policies...")
     
     with gr.Row():
         with gr.Column(scale=3):

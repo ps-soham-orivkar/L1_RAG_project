@@ -34,3 +34,4 @@ desktop.ini
 
  # Data directory
 data/*.pdf
+test_files/
