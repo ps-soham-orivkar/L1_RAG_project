@@ -1,5 +1,7 @@
-# tools.py
 # Standard Python tools: Attendance calculator and eligibility checker.
+
+import re
+from chatbot import get_llm
 
 def calculate_attendance(total_classes, attended_classes):
     """
@@ -58,7 +60,6 @@ def route_query_to_tool(query, retriever=None):
     if retriever and ("list the topics" in query_lower or "list topics" in query_lower or "main topics" in query_lower):
         def _stream_topics():
             try:
-                from chatbot import get_llm
                 llm = get_llm()
                 all_content = "\n".join([doc.page_content for doc in retriever.documents[:15]])
                 prompt = f"Please list the main topics from the following document content:\n\n{all_content}"
@@ -71,21 +72,17 @@ def route_query_to_tool(query, retriever=None):
                 yield f"Error extracting topics: {str(e)}"
         return _stream_topics()
             
-    import re
     page_match = re.search(r'explain\s*(the\s*)?page\s*(\d+)', query_lower)
     if retriever and page_match:
         def _stream_page():
             try:
                 page_num = int(page_match.group(2))
-                page_chunks = [doc.page_content for doc in retriever.documents if doc.metadata.get('page') == page_num - 1]
-                if not page_chunks:
-                    page_chunks = [doc.page_content for doc in retriever.documents if doc.metadata.get('page') == page_num]
+                page_chunks = [doc.page_content for doc in retriever.documents if doc.metadata.get('page') in (page_num - 1, page_num)]
                     
                 if not page_chunks:
                     yield f"Sorry, I couldn't find any content for page {page_num} in the uploaded documents."
                     return
                     
-                from chatbot import get_llm
                 llm = get_llm()
                 page_content = "\n".join(page_chunks)
                 prompt = f"Please explain the following content from page {page_num} in simple words:\n\n{page_content}"

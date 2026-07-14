@@ -6,6 +6,8 @@ from data_processor import load_documents_from_directory, chunk_documents
 from retriever import HybridRetriever
 import os
 import shutil
+import types
+from langchain_community.document_loaders import PyMuPDFLoader
 
 # 1. Clean ChromaDB cache on startup to prevent duplicate chunks in local database
 CHROMA_DIR = "./chroma_db"
@@ -38,7 +40,6 @@ def chat_with_agent(message, history):
     # 1. Fast tool check
     tool_response = route_query_to_tool(message, retriever)
     if tool_response:
-        import types
         if isinstance(tool_response, types.GeneratorType):
             for chunk in tool_response:
                 yield chunk
@@ -71,7 +72,6 @@ def process_uploaded_pdf(file_path):
         return "Please upload a file first."
         
     try:
-        from langchain_community.document_loaders import PyMuPDFLoader
         loader = PyMuPDFLoader(file_path)
         docs = loader.load()
         chunks = chunk_documents(docs)

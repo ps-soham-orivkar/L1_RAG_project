@@ -36,7 +36,8 @@ class HybridRetriever:
             self.vector_store.add_documents(chunks)
             self.documents.extend(chunks)
         
-        # Ingest into BM25 (Keyword Search) - Rebuild full index
+        # Ingest into BM25 (Keyword Search) - Rebuild full index.
+        # Note: rank_bm25 BM25Okapi does not support incremental updates, so re-indexing the full corpus is required.
         tokenized_corpus = [doc.page_content.split(" ") for doc in self.documents]
         self.bm25 = BM25Okapi(tokenized_corpus)
         
