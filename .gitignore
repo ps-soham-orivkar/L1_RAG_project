@@ -10,12 +10,26 @@ eggs/
 *.egg
 
 # Virtual environments
+.venv/
 venv/
 .env/
 env/
+ENV/
+*.venv
 
-# ChromaDB persistent storage
+# ChromaDB persistent storage & cache
 chroma_db/
+chroma_db*/
+*.chroma*
+
+# Environment & local secrets
+.env
+.env.local
+
+# Scratch & logs
+scratch/
+*.log
+*.tmp
 
 # IDE
 .vscode/
@@ -28,10 +42,6 @@ chroma_db/
 Thumbs.db
 desktop.ini
 
-# Temp files
-*.tmp
-*.log
-
- # Data directory
-data/*.pdf
+# Data directory temporary files
 test_files/
+

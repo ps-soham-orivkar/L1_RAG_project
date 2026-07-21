@@ -21,26 +21,28 @@ def generate_rag_response(prompt, chat_history, retrieved_chunks):
     Runs the Standard RAG pipeline with streaming.
     Uses a simplified prompt structure optimized for small models.
     """
+    # Guardrail: If no relevant policy chunks were retrieved, refuse out-of-domain queries immediately
+    if not retrieved_chunks:
+        yield "I am a University Policy Assistant. I can only answer questions using the provided university policy documents."
+        return
+
     llm = get_llm()
     
     # Format context from retrieved chunks
     context_text = ""
-    if retrieved_chunks:
-        for i, chunk in enumerate(retrieved_chunks):
-            source = chunk.metadata.get('source_name', 'Unknown Document')
-            page = chunk.metadata.get('page', 'Unknown Page')
-            if isinstance(page, int):
-                page += 1
-            context_text += f"\n[Source {i+1}: {source}, Page {page}]\n{chunk.page_content}\n"
-    else:
-        context_text = "No relevant policy documents were found."
+    for i, chunk in enumerate(retrieved_chunks):
+        source = chunk.metadata.get('source_name', 'Unknown Document')
+        page = chunk.metadata.get('page', 'Unknown Page')
+        if isinstance(page, int):
+            page += 1
+        context_text += f"\n[Source {i+1}: {source}, Page {page}]\n{chunk.page_content}\n"
     
-    # Simplified prompt — small models follow this much better than numbered instructions
+    # Strict system prompt instructing the model to refuse out-of-context queries
     system_prompt = (
         f"You are a University Policy Assistant. "
-        f"Answer the user's question using ONLY the context below. "
-        f"Include the source citation at the end of your answer. "
-        f"If the context does not contain the answer, say so.\n\n"
+        f"Answer the user's question using ONLY the facts explicitly stated in the context below. "
+        f"If the context below does not explicitly contain the answer to the question, you MUST reply: 'I am a University Policy Assistant and I can only answer questions using the provided university policy documents.' "
+        f"Do NOT use outside general knowledge or answer unrelated topics under any circumstances.\n\n"
         f"Context:\n{context_text}"
     )
     

@@ -23,31 +23,66 @@ A local, modular University Policy Assistant that uses a Hybrid Retrieval-Augmen
 * **Data Processing:** PyMuPDFLoader (pymupdf)
 * **MCP:** Python logic (custom)
 
-## Installation
+## 🚀 Quick Start Guide (For Humans & AI Agents)
 
-1. **Install Python Dependencies:**
-   Ensure you have Python installed, then run:
+Follow these steps to set up and start the application on a new system.
+
+### Prerequisites
+1. **Python 3.10 or higher** installed.
+2. **Ollama** installed ([https://ollama.com/](https://ollama.com/)).
+
+---
+
+### Step-by-Step Installation
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/ps-soham-orivkar/L1_RAG_project.git
+   cd L1_RAG_project
+   ```
+
+2. **Set Up Virtual Environment (Recommended):**
+   ```bash
+   python -m venv .venv
+   # On Windows PowerShell:
+   .\.venv\Scripts\Activate.ps1
+   # On Linux/macOS:
+   source .venv/bin/activate
+   ```
+
+3. **Install Dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-2. **Install Ollama:**
-   Download and install [Ollama](https://ollama.com/) for your operating system.
-3. **Pull Qwen Model:**
+
+   > 💡 **Important Note for Windows Users & AI Agents:**
+   > On Windows systems, to prevent C-extension DLL symbol errors with ChromaDB and `onnxruntime`, ensure you use a compatible NumPy version (< 2.0):
+   > ```bash
+   > pip install "numpy<2" onnxruntime==1.16.3
+   > ```
+
+4. **Pull & Start Ollama LLM Model:**
+   Make sure the Ollama service is running, then pull the Qwen2.5 model:
    ```bash
    ollama pull qwen2.5:3b
    ```
 
-## Usage
-
-1. **Preload Documents (Optional):**
-   Place your university policy PDF files in the `data/` folder before starting the application.
-2. **Run the App:**
+5. **Run the Application:**
    ```bash
    python app.py
    ```
-3. **Interact:**
-   * Ask questions in the chat interface.
-   * Upload additional PDF documents using the sidebar.
+   Once launched, open your browser and navigate to **`http://localhost:7860`** to interact with the assistant UI!
+
+---
+
+## Usage
+
+1. **Preload Documents (Optional):**
+   Place your university policy PDF files inside the `data/` directory before launching `python app.py`. They will be automatically parsed, chunked, and indexed into the vector database on startup.
+2. **Interactive UI:**
+   - **Chat:** Ask policy-related questions directly in the Gradio chat interface.
+   - **Document Upload:** Upload additional PDF documents at runtime using the sidebar file picker.
+   - **Tools:** Ask natural queries like `calculate attendance 40 30` or `check eligibility 80` to trigger the Python tool layer.
 
 ## Project Structure
 ```text
