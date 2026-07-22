@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "query": "What is the minimum attendance requirement for university exams?",
+    "ground_truth_keywords": ["attendance", "75%", "minimum", "requirement", "lectures"],
+    "expected_facts": ["75%", "attendance"]
+  },
+  {
+    "id": 2,
+    "query": "What are the rules regarding academic integrity and plagiarism?",
+    "ground_truth_keywords": ["academic integrity", "plagiarism", "misconduct", "citation", "referencing"],
+    "expected_facts": ["plagiarism", "academic integrity"]
+  },
+  {
+    "id": 3,
+    "query": "How can a student request a course withdrawal or leave of absence?",
+    "ground_truth_keywords": ["withdrawal", "leave of absence", "request", "examinations", "application"],
+    "expected_facts": ["withdrawal", "application"]
+  },
+  {
+    "id": 4,
+    "query": "What is the policy for grading and GPA calculation?",
+    "ground_truth_keywords": ["grading", "gpa", "evaluation", "assessment", "cgpa"],
+    "expected_facts": ["grading", "evaluation"]
+  },
+  {
+    "id": 5,
+    "query": "What are the student conduct rules and disciplinary procedures?",
+    "ground_truth_keywords": ["conduct", "disciplinary", "misconduct", "regulations", "discipline"],
+    "expected_facts": ["conduct", "disciplinary"]
+  },
+  {
+    "id": 6,
+    "query": "What is the minimum passing grade for undergraduate degree courses?",
+    "ground_truth_keywords": ["passing", "grade", "minimum", "degree", "instruction"],
+    "expected_facts": ["passing", "grade"]
+  },
+  {
+    "id": 7,
+    "query": "How is continuous internal assessment evaluated?",
+    "ground_truth_keywords": ["assessment", "internal", "continuous", "evaluation", "tests"],
+    "expected_facts": ["assessment", "internal"]
+  },
+  {
+    "id": 8,
+    "query": "What are the rules for re-examination and supplementary exams?",
+    "ground_truth_keywords": ["re-examination", "examination", "supplementary", "paper", "resit"],
+    "expected_facts": ["examination", "re-examination"]
+  },
+  {
+    "id": 9,
+    "query": "What happens if a student fails to meet the 75% attendance threshold?",
+    "ground_truth_keywords": ["75%", "attendance", "threshold", "eligible", "debarred"],
+    "expected_facts": ["75%", "attendance"]
+  },
+  {
+    "id": 10,
+    "query": "How to calculate attendance percentage if 36 out of 45 classes are attended?",
+    "ground_truth_keywords": ["attendance", "percentage", "36", "45", "80.00%"],
+    "expected_facts": ["80.00%", "eligible"]
+  },
+  {
+    "id": 11,
+    "query": "Is 78% attendance eligible for end-semester examinations?",
+    "ground_truth_keywords": ["78%", "eligible", "attendance", "threshold", "minimum"],
+    "expected_facts": ["eligible", "78%"]
+  },
+  {
+    "id": 12,
+    "query": "What are the guidelines for project work and seminars?",
+    "ground_truth_keywords": ["seminars", "project", "practical", "guidelines", "instruction"],
+    "expected_facts": ["seminars", "instruction"]
+  }
+]

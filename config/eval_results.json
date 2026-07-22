@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-07-22 12:59:30",
+  "total_benchmark_queries": 12,
+  "retrieval_metrics": {
+    "precision_at_k": "85.50%",
+    "recall_at_k": "83.33%",
+    "context_relevancy": "81.25%"
+  },
+  "generation_metrics": {
+    "faithfulness": "88.00%",
+    "answer_relevancy": "86.40%"
+  }
+}

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Policy AI - Premium Assistant</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4F46E5",
+                        secondary: "#6366F1",
+                        background: "#F9FAFB",
+                        surface: "#FFFFFF",
+                        "on-surface": "#111827",
+                        "on-surface-variant": "#6B7280",
+                        outline: "#E5E7EB",
+                        "outline-variant": "#F3F4F6",
+                    },
+                    borderRadius: {
+                        'xl': '12px',
+                        '2xl': '16px',
+                        '3xl': '24px',
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'ui-sans-serif', 'system-ui'],
+                        mono: ['JetBrains Mono', 'ui-monospace'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .chat-scroll::-webkit-scrollbar { width: 5px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .gradient-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-bubble {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+        }
+
+        .terminal-bg {
+            background: #0F172A;
+        }
+    </style>
+</head>
+<body class="bg-background font-sans text-on-surface overflow-hidden h-screen flex tracking-tight">
+
+<!-- Main Full-Width Section -->
+<main class="flex-1 flex flex-col h-screen relative bg-[#F8FAFC]">
+    <!-- Top Floating Glassmorphic Navbar -->
+    <div class="px-6 pt-4 pb-2 sticky top-0 z-30 pointer-events-none">
+        <header class="pointer-events-auto flex justify-between items-center w-full px-6 py-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-lg shadow-indigo-500/5 ring-1 ring-black/5 transition-all">
+            <!-- Left: Brand Logo, New Session & Upload PDF -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 gradient-btn rounded-xl flex items-center justify-center text-white shadow-md">
+                        <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-extrabold tracking-tighter text-on-surface leading-none">Policy AI</h1>
+                        <p class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/70">Intelligence Engine</p>
+                    </div>
+                </div>
+
+                <div class="h-5 w-[1px] bg-outline/60 mx-1"></div>
+
+                <button id="new-session-btn" onclick="createNewSession()" class="gradient-btn flex items-center gap-1.5 px-3.5 py-2 text-white rounded-xl font-semibold text-xs shadow-sm active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-base">add_circle</span>
+                    <span>New Session</span>
+                </button>
+
+                <input id="hidden-file-input" type="file" accept=".pdf" class="hidden" onchange="uploadPDF(event)"/>
+                <button onclick="document.getElementById('hidden-file-input').click()" class="bg-white border border-primary/20 text-primary hover:bg-primary/5 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5" title="Upload new PDF document">
+                    <span class="material-symbols-outlined text-base">upload_file</span>
+                    <span>Upload PDF</span>
+                </button>
+                <button onclick="refreshKnowledgeBase()" class="bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 active:scale-95" title="Re-scan and re-index vector database">
+                    <span class="material-symbols-outlined text-base">refresh</span>
+                    <span>Refresh KB</span>
+                </button>
+            </div>
+
+            <!-- Center: History Dropdown & Navigation Tabs -->
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <button onclick="toggleHistoryDropdown(event)" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-on-surface-variant/80 hover:text-on-surface bg-white/60 border border-outline/50 hover:bg-white transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-base text-primary">history</span>
+                        <span>Recent History</span>
+                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                    </button>
+                    <div id="history-dropdown-menu" class="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl border border-outline/60 rounded-2xl shadow-2xl p-3 hidden z-50 transition-all">
+                        <div class="flex justify-between items-center px-1 pb-2 border-b border-outline/50 mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">Saved Chat Sessions</span>
+                            <button onclick="clearAllHistory(event)" class="text-[10px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 border border-red-200 shadow-xs">
+                                <span class="material-symbols-outlined text-xs">delete_sweep</span>
+                                <span>Clear All</span>
+                            </button>
+                        </div>
+                        <div id="recent-history-list" class="space-y-1.5 max-h-64 overflow-y-auto chat-scroll">
+                            <div class="px-3 py-2 text-xs text-on-surface-variant/60 font-medium italic">Loading saved sessions...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex items-center gap-1 bg-outline-variant/60 p-1 rounded-xl border border-outline/40">
+                    <button id="nav-docs" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-on-surface-variant/80 hover:text-on-surface hover:bg-white/50" onclick="openModal('docs')">Documents</button>
+                    <button id="nav-metrics" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-on-surface-variant/80 hover:text-on-surface hover:bg-white/50" onclick="openModal('metrics')">Metrics & Cache</button>
+                </nav>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="exportData()" class="bg-white/80 border border-outline/60 text-on-surface-variant px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-white hover:text-primary transition-all shadow-sm flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span>Export Session</span>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- Chat & Hero Area -->
+    <div id="chat-container" class="flex-1 overflow-y-auto px-6 py-4 chat-scroll space-y-6 max-w-5xl w-full mx-auto">
+        <!-- Hero Welcome Card -->
+        <div id="hero-section" class="py-10 text-center space-y-4">
+            <div class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-xs mb-2">
+                <span class="material-symbols-outlined text-sm">bolt</span>
+                <span>Instant Response Cache & Persistent Memory Enabled</span>
+            </div>
+            <h2 class="text-3xl font-extrabold text-on-surface tracking-tight">How can I assist you with University Policies?</h2>
+            <p class="text-sm text-on-surface-variant max-w-xl mx-auto font-medium">Ask questions about academic grading, attendance requirements, course drops, or code of conduct.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto pt-6">
+                <button onclick="quickAsk('What is the minimum attendance requirement for university exams?')" class="bg-white border border-outline p-4 rounded-2xl text-left hover:border-primary/50 hover:shadow-md transition-all group">
+                    <span class="text-xs font-bold text-primary group-hover:underline">Exam Attendance Rules</span>
+                    <p class="text-xs text-on-surface-variant mt-1 font-medium">What is the minimum attendance requirement?</p>
+                </button>
+                <button onclick="quickAsk('What are the rules regarding academic integrity and plagiarism?')" class="bg-white border border-outline p-4 rounded-2xl text-left hover:border-primary/50 hover:shadow-md transition-all group">
+                    <span class="text-xs font-bold text-primary group-hover:underline">Academic Integrity</span>
+                    <p class="text-xs text-on-surface-variant mt-1 font-medium">What are the rules on plagiarism?</p>
+                </button>
+                <button onclick="quickAsk('What is the policy for grading and GPA calculation?')" class="bg-white border border-outline p-4 rounded-2xl text-left hover:border-primary/50 hover:shadow-md transition-all group">
+                    <span class="text-xs font-bold text-primary group-hover:underline">Grading & GPA Policy</span>
+                    <p class="text-xs text-on-surface-variant mt-1 font-medium">How is GPA and grading calculated?</p>
+                </button>
+            </div>
+
+            <!-- Agentic MCP Tools Quick Actions -->
+            <div class="pt-4 flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50 w-full mb-0.5">Agentic MCP Tools Quick Triggers:</span>
+                <button onclick="quickAsk('I attended 36 out of 45 classes, what is my percentage?')" class="bg-indigo-50/70 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs">
+                    <span class="material-symbols-outlined text-sm">calculate</span>
+                    <span>Attendance Tool (36/45)</span>
+                </button>
+                <button onclick="quickAsk('My attendance is 78%, am I eligible for exams?')" class="bg-purple-50/70 border border-purple-100 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs">
+                    <span class="material-symbols-outlined text-sm">verified</span>
+                    <span>Exam Eligibility (78%)</span>
+                </button>
+                <button onclick="quickAsk('Show eval dataset benchmark queries')" class="bg-emerald-50/70 border border-emerald-100 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs">
+                    <span class="material-symbols-outlined text-sm">dataset</span>
+                    <span>Eval Dataset Tool</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="messages-list" class="space-y-6 pb-24"></div>
+    </div>
+
+    <!-- Floating Input Bar at Bottom -->
+    <div class="p-6 bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/90 to-transparent sticky bottom-0 z-20">
+        <div class="max-w-4xl mx-auto bg-white border border-outline shadow-xl rounded-2xl p-2.5 flex items-center gap-3 ring-1 ring-black/5">
+            <input id="user-input" type="text" placeholder="Ask a question about policy documents..." onkeydown="if(event.key==='Enter') sendMessage()" class="flex-1 bg-transparent border-0 focus:ring-0 text-sm font-medium text-on-surface px-3 placeholder:text-on-surface-variant/50 outline-none"/>
+            <button onclick="sendMessage()" class="gradient-btn text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-1.5">
+                <span>Send Query</span>
+                <span class="material-symbols-outlined text-base">send</span>
+            </button>
+        </div>
+    </div>
+</main>
+
+<!-- Unified Overlay Modal for Documents & Metrics -->
+<div id="overlay-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-outline rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+        <div class="px-6 py-4 border-b border-outline flex justify-between items-center bg-gray-50/50">
+            <h3 id="modal-title" class="text-base font-extrabold text-on-surface">Modal Title</h3>
+            <button onclick="closeModal()" class="p-1.5 rounded-xl hover:bg-outline-variant text-on-surface-variant transition-all">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto chat-scroll flex-1">
+            <!-- Modal Documents Content -->
+            <div id="modal-content-docs" class="space-y-4 hidden">
+                <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-[10px] font-extrabold uppercase text-on-surface-variant/40 tracking-widest">Active Knowledge Base</h4>
+                        <button onclick="refreshKnowledgeBase()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">refresh</span>
+                            <span>Refresh KB</span>
+                        </button>
+                    </div>
+                    <div id="docs-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Modal Metrics Content -->
+            <div id="modal-content-metrics" class="space-y-6 hidden">
+                <!-- Cache Performance Section -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-yellow-300 text-xl">bolt</span>
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-indigo-100">Response Cache Memory Performance</h4>
+                        </div>
+                        <span id="cache-hit-rate" class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-extrabold">Hit Rate: 0%</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 pt-1">
+                        <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                            <p class="text-[9px] uppercase tracking-wider font-extrabold text-indigo-200">Cached Queries</p>
+                            <p id="cache-entries-count" class="text-xl font-extrabold mt-0.5">0</p>
+                        </div>
+                        <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                            <p class="text-[9px] uppercase tracking-wider font-extrabold text-indigo-200">Cache Hits</p>
+                            <p id="cache-hits-count" class="text-xl font-extrabold mt-0.5">0</p>
+                        </div>
+                        <div class="bg-white/10 rounded-xl p-3 backdrop-blur-md">
+                            <p class="text-[9px] uppercase tracking-wider font-extrabold text-indigo-200">Cache Misses</p>
+                            <p id="cache-misses-count" class="text-xl font-extrabold mt-0.5">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pb-2 border-b border-outline/50">
+                    <div>
+                        <h4 class="text-xs font-bold text-on-surface uppercase tracking-wider text-on-surface-variant/60">Evaluation Metrics Benchmark</h4>
+                        <p id="metric-timestamp" class="text-[10px] text-on-surface-variant/60 font-medium">Last evaluation run: Loading...</p>
+                    </div>
+                    <button onclick="runBenchmark()" class="gradient-btn text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95">
+                        <span class="material-symbols-outlined text-sm">play_arrow</span>
+                        <span>Run Evaluation</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                        <p class="text-[10px] font-extrabold text-on-surface-variant/50 uppercase mb-1">Precision@K</p>
+                        <p id="metric-precision" class="text-2xl font-extrabold text-primary tracking-tighter">--</p>
+                        <div class="h-1.5 bg-outline rounded-full mt-3 overflow-hidden">
+                            <div id="bar-precision" class="h-full bg-primary rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                        <p class="text-[10px] font-extrabold text-on-surface-variant/50 uppercase mb-1">Recall@K</p>
+                        <p id="metric-recall" class="text-2xl font-extrabold text-secondary tracking-tighter">--</p>
+                        <div class="h-1.5 bg-outline rounded-full mt-3 overflow-hidden">
+                            <div id="bar-recall" class="h-full bg-secondary rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                        <p class="text-[10px] font-extrabold text-on-surface-variant/50 uppercase mb-1">Faithfulness</p>
+                        <p id="metric-faithfulness" class="text-2xl font-extrabold text-emerald-600 tracking-tighter">--</p>
+                        <div class="h-1.5 bg-outline rounded-full mt-3 overflow-hidden">
+                            <div id="bar-faithfulness" class="h-full bg-emerald-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                        <p class="text-[10px] font-extrabold text-on-surface-variant/50 uppercase mb-1">Answer Relevancy</p>
+                        <p id="metric-answer-relevance" class="text-2xl font-extrabold text-indigo-600 tracking-tighter">--</p>
+                        <div class="h-1.5 bg-outline rounded-full mt-3 overflow-hidden">
+                            <div id="bar-answer-relevance" class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-outline rounded-2xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-[10px] font-extrabold text-on-surface-variant/50 uppercase">Context Relevancy</p>
+                        <span id="metric-context-rel" class="text-xs bg-green-50 text-green-600 px-2.5 py-0.5 rounded-full font-bold">--</span>
+                    </div>
+                    <div class="h-2 bg-outline rounded-full overflow-hidden">
+                        <div id="bar-context-rel" class="h-full bg-green-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let chatHistory = [];
+    let currentSessionId = localStorage.getItem('policy_ai_session_id');
+
+    if (!currentSessionId) {
+        currentSessionId = 'session_' + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem('policy_ai_session_id', currentSessionId);
+    }
+
+    function openModal(view) {
+        const modal = document.getElementById('overlay-modal');
+        const title = document.getElementById('modal-title');
+        document.getElementById('modal-content-docs').classList.add('hidden');
+        document.getElementById('modal-content-metrics').classList.add('hidden');
+
+        if (view === 'docs') {
+            title.innerText = '📁 Knowledge Base Policy Documents';
+            document.getElementById('modal-content-docs').classList.remove('hidden');
+            fetchDocs();
+        } else if (view === 'metrics') {
+            title.innerText = '📊 System Metrics & Response Cache';
+            document.getElementById('modal-content-metrics').classList.remove('hidden');
+            fetchMetrics();
+        }
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('overlay-modal').classList.add('hidden');
+    }
+
+    function quickAsk(query) {
+        document.getElementById('user-input').value = query;
+        sendMessage();
+    }
+
+    function createNewSession() {
+        currentSessionId = 'session_' + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem('policy_ai_session_id', currentSessionId);
+        chatHistory = [];
+        document.getElementById('messages-list').innerHTML = '';
+        document.getElementById('hero-section').classList.remove('hidden');
+        fetchHistorySessions();
+    }
+
+    async function loadSession(sessionId) {
+        currentSessionId = sessionId;
+        localStorage.setItem('policy_ai_session_id', sessionId);
+        
+        try {
+            const res = await fetch(`/api/history/session/${sessionId}`);
+            const messages = await res.json();
+
+            const list = document.getElementById('messages-list');
+            list.innerHTML = '';
+
+            if (messages && messages.length > 0) {
+                document.getElementById('hero-section').classList.add('hidden');
+                chatHistory = [];
+
+                for (let msg of messages) {
+                    if (msg.role === 'user') {
+                        appendUserMessage(msg.content);
+                        chatHistory.push({ role: 'user', content: msg.content });
+                    } else {
+                        const id = 'ast-' + (msg.id || Date.now());
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'flex justify-start gap-4';
+                        msgDiv.id = id;
+                        list.appendChild(msgDiv);
+                        updateStreamingAssistantMessage(id, msg.content, msg.sources, false, msg.cached);
+                        chatHistory.push({ role: 'assistant', content: msg.content });
+                    }
+                }
+            } else {
+                document.getElementById('hero-section').classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error("Failed to load session:", e);
+        }
+    }
+
+    async function deleteSession(sessionId, event) {
+        if (event) event.stopPropagation();
+        if (!confirm("Delete this session?")) return;
+        
+        try {
+            await fetch(`/api/history/session/${sessionId}`, { method: 'DELETE' });
+            if (sessionId === currentSessionId) {
+                createNewSession();
+            } else {
+                fetchHistorySessions();
+            }
+        } catch (e) {
+            alert("Failed to delete session: " + e.message);
+        }
+    }
+
+    function toggleHistoryDropdown(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('history-dropdown-menu');
+        if (!menu) return;
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            fetchHistorySessions();
+        } else {
+            menu.classList.add('hidden');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('history-dropdown-menu');
+        if (menu && !menu.contains(e.target) && !e.target.closest('button[onclick*="toggleHistoryDropdown"]')) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    async function clearAllHistory(e) {
+        if (e) e.stopPropagation();
+        if (!confirm("Are you sure you want to delete ALL saved chat history sessions?")) return;
+        try {
+            await fetch('/api/history/sessions', { method: 'DELETE' });
+            createNewSession();
+            fetchHistorySessions();
+        } catch (err) {
+            alert("Failed to clear history: " + err.message);
+        }
+    }
+
+    async function fetchHistorySessions() {
+        try {
+            const res = await fetch('/api/history/sessions');
+            const sessions = await res.json();
+            const list = document.getElementById('recent-history-list');
+            
+            if (!list) return;
+            if (!sessions || sessions.length === 0) {
+                list.innerHTML = `<div class="px-3 py-2 text-xs text-on-surface-variant/60 font-medium italic">No saved sessions yet</div>`;
+                return;
+            }
+
+            list.innerHTML = sessions.map(s => {
+                const isActive = s.session_id === currentSessionId;
+                const countBadge = s.message_count ? `<span class="text-[9px] font-bold text-on-surface-variant/60 bg-gray-100 px-1.5 py-0.5 rounded-md shrink-0">${s.message_count} msgs</span>` : '';
+                return `
+                    <div onclick="loadSession('${s.session_id}')" class="group/item flex items-center justify-between p-2 text-xs rounded-xl cursor-pointer transition-all font-medium border ${isActive ? 'bg-primary/10 text-primary font-bold border-primary/30' : 'text-on-surface-variant border-transparent hover:bg-primary/5 hover:text-primary'}">
+                        <div class="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                            <span class="material-symbols-outlined text-sm text-primary shrink-0">chat_bubble</span>
+                            <span class="truncate" title="${escapeHtml(s.title)}">${escapeHtml(s.title)}</span>
+                            ${countBadge}
+                        </div>
+                        <button onclick="deleteSession('${s.session_id}', event)" class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all shrink-0" title="Delete Session">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {}
+    }
+
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(chatHistory, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `rag_session_${currentSessionId}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const message = input.value.trim();
+        if (!message) return;
+
+        input.value = '';
+        document.getElementById('hero-section').classList.add('hidden');
+
+        appendUserMessage(message);
+        const assistantMsgId = appendAssistantLoader();
+
+        try {
+            const response = await fetch('/api/chat/stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    history: chatHistory,
+                    session_id: currentSessionId
+                })
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let accumulatedText = "";
+            let retrievedSources = [];
+            let isCached = false;
+            let lookupTimeMs = 0;
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const payload = JSON.parse(line.substring(6));
+                            if (payload.type === 'sources') {
+                                retrievedSources = payload.sources || [];
+                                isCached = payload.cached || false;
+                                lookupTimeMs = payload.lookup_time_ms || 0;
+                            } else if (payload.type === 'content') {
+                                accumulatedText = payload.text;
+                                updateStreamingAssistantMessage(assistantMsgId, accumulatedText, retrievedSources, true, isCached, lookupTimeMs);
+                            } else if (payload.type === 'done') {
+                                updateStreamingAssistantMessage(assistantMsgId, accumulatedText, retrievedSources, false, isCached, lookupTimeMs);
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+
+            chatHistory.push({ role: 'user', content: message });
+            chatHistory.push({ role: 'assistant', content: accumulatedText });
+            fetchHistorySessions();
+
+        } catch (err) {
+            updateStreamingAssistantMessage(assistantMsgId, "Encountered error connecting to server: " + err.message, [], false, false, 0);
+        }
+    }
+
+    function appendUserMessage(text) {
+        const list = document.getElementById('messages-list');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-end';
+        msgDiv.innerHTML = `
+            <div class="user-bubble text-white py-3 px-6 rounded-2xl rounded-tr-none shadow-lg max-w-[85%] text-sm font-medium leading-relaxed">
+                ${escapeHtml(text)}
+            </div>
+        `;
+        list.appendChild(msgDiv);
+        scrollToBottom();
+    }
+
+    function appendAssistantLoader() {
+        const id = 'ast-' + Date.now();
+        const list = document.getElementById('messages-list');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-start gap-4';
+        msgDiv.id = id;
+        msgDiv.innerHTML = `
+            <div class="w-9 h-9 rounded-xl bg-white border border-outline flex items-center justify-center shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+            </div>
+            <div class="bg-white border border-outline p-6 rounded-2xl rounded-tl-none shadow-sm max-w-[90%] text-[15px] relative group flex items-center gap-3">
+                <span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                <span class="text-sm font-medium text-on-surface-variant">Checking cache memory & searching policy documents...</span>
+            </div>
+        `;
+        list.appendChild(msgDiv);
+        scrollToBottom();
+        return id;
+    }
+
+    function cleanResponseText(text) {
+        if (!text) return text;
+        return text.replace(/\n\s*(\*\*|\*)?(Sources|References|Sources Used|Citations)(\*\*|\*)?:[\s\S]*$/i, '').trim();
+    }
+
+    function updateStreamingAssistantMessage(id, text, sources, isGenerating, isCached = false, lookupTimeMs = 0) {
+        const container = document.getElementById(id);
+        if (!container) return;
+
+        const cleanedText = cleanResponseText(text);
+
+        let cacheBadge = '';
+        if (isCached) {
+            cacheBadge = `
+                <div class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold mb-3 shadow-xs">
+                    <span class="material-symbols-outlined text-sm text-amber-600">bolt</span>
+                    <span>Instant Answer (Cache Hit ${lookupTimeMs ? `• ${lookupTimeMs}ms` : ''})</span>
+                </div>
+            `;
+        }
+
+        let sourcesHtml = '';
+        if (sources && sources.length > 0) {
+            sourcesHtml = `
+                <div class="flex flex-wrap gap-2 pt-4 border-t border-outline/50 mt-4">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/60 w-full mb-1">Sources Cited:</span>
+                    ${sources.map(s => `
+                        <div class="bg-outline-variant/50 border border-outline px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs font-bold text-primary hover:bg-primary/5 cursor-pointer transition-all">
+                            <span class="material-symbols-outlined text-[14px]">description</span>
+                            <span>${escapeHtml(s)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        const pulseCursor = isGenerating ? `<span class="inline-block w-2 h-4 bg-primary animate-pulse ml-1 rounded"></span>` : '';
+
+        container.innerHTML = `
+            <div class="w-9 h-9 rounded-xl bg-white border border-outline flex items-center justify-center shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+            </div>
+            <div class="bg-white border border-outline p-6 rounded-2xl rounded-tl-none shadow-sm max-w-[90%] text-[15px] relative group">
+                ${cacheBadge}
+                ${!isGenerating ? `
+                <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                    <button onclick="navigator.clipboard.writeText(\`${escapeHtml(cleanedText)}\`)" class="p-1.5 hover:bg-outline-variant rounded-md text-on-surface-variant" title="Copy"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+                </div>` : ''}
+                <div class="font-medium text-on-surface whitespace-pre-wrap">${formatMarkdown(cleanedText)}${pulseCursor}</div>
+                ${sourcesHtml}
+            </div>
+        `;
+        scrollToBottom();
+    }
+
+    async function uploadPDF(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            alert(data.message);
+            fetchDocs();
+        } catch (e) {
+            alert("Failed to upload document: " + e.message);
+        }
+    }
+
+    async function refreshKnowledgeBase() {
+        if (!confirm("Are you sure you want to refresh the Knowledge Base? This will re-index all policy documents and clear the cache.")) return;
+        try {
+            const res = await fetch('/api/refresh-kb', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message || "Knowledge Base refreshed successfully!");
+            fetchDocs();
+        } catch (e) {
+            alert("Failed to refresh Knowledge Base: " + e.message);
+        }
+    }
+
+    async function fetchDocs() {
+        try {
+            const res = await fetch('/api/docs');
+            const docs = await res.json();
+            const docsList = document.getElementById('docs-list');
+            if (docsList) {
+                if (!docs || docs.length === 0) {
+                    docsList.innerHTML = `<div class="p-4 border border-dashed border-outline rounded-2xl text-center text-xs text-on-surface-variant/60 font-medium">No active documents in Knowledge Base</div>`;
+                } else {
+                    docsList.innerHTML = docs.map(d => `
+                        <div class="bg-white border border-outline rounded-2xl p-4 flex items-center gap-4 hover:border-primary/40 transition-all group">
+                            <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600 shadow-sm">
+                                <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[13px] font-bold text-on-surface truncate">${escapeHtml(d.name)}</p>
+                                <p class="text-[10px] text-on-surface-variant font-medium">${d.pages} pages • ${d.size}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (e) {}
+    }
+
+    async function fetchMetrics() {
+        try {
+            const res = await fetch('/api/metrics');
+            const data = await res.json();
+            
+            if (data.cache_metrics) {
+                document.getElementById('cache-hit-rate').innerText = `Hit Rate: ${data.cache_metrics.hit_rate_pct || '0%'}`;
+                document.getElementById('cache-entries-count').innerText = data.cache_metrics.total_cached_entries || 0;
+                document.getElementById('cache-hits-count').innerText = data.cache_metrics.total_hits || 0;
+                document.getElementById('cache-misses-count').innerText = data.cache_metrics.total_misses || 0;
+            }
+
+            if (data.timestamp) {
+                const tsEl = document.getElementById('metric-timestamp');
+                if (tsEl) tsEl.innerText = `Last evaluation run: ${data.timestamp}`;
+            }
+
+            if (data.retrieval_metrics) {
+                const p = data.retrieval_metrics.precision_at_k || '--';
+                const r = data.retrieval_metrics.recall_at_k || '--';
+                const cr = data.retrieval_metrics.context_relevancy || '--';
+
+                document.getElementById('metric-precision').innerText = p;
+                document.getElementById('bar-precision').style.width = p.includes('%') ? p : (parseFloat(p) * 100) + '%';
+
+                document.getElementById('metric-recall').innerText = r;
+                document.getElementById('bar-recall').style.width = r.includes('%') ? r : (parseFloat(r) * 100) + '%';
+
+                document.getElementById('metric-context-rel').innerText = cr;
+                document.getElementById('bar-context-rel').style.width = cr.includes('%') ? cr : (parseFloat(cr) * 100) + '%';
+            }
+
+            if (data.generation_metrics) {
+                const f = data.generation_metrics.faithfulness || '--';
+                const ar = data.generation_metrics.answer_relevancy || '--';
+
+                document.getElementById('metric-faithfulness').innerText = f;
+                document.getElementById('bar-faithfulness').style.width = f.includes('%') ? f : (parseFloat(f) * 100) + '%';
+
+                document.getElementById('metric-answer-relevance').innerText = ar;
+                document.getElementById('bar-answer-relevance').style.width = ar.includes('%') ? ar : (parseFloat(ar) * 100) + '%';
+            }
+        } catch (e) {
+            console.error("Failed to fetch metrics:", e);
+        }
+    }
+
+    async function runBenchmark() {
+        alert("Running evaluation benchmark suite...");
+        try {
+            const res = await fetch('/api/evaluate', { method: 'POST' });
+            const data = await res.json();
+            fetchMetrics();
+            alert("Benchmark evaluation completed!");
+        } catch (e) {
+            alert("Evaluation error: " + e.message);
+        }
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('chat-container');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function formatMarkdown(str) {
+        return str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>');
+    }
+
+    // Initialize application state
+    loadSession(currentSessionId);
+    fetchHistorySessions();
+    fetchDocs();
+    fetchMetrics();
+</script>
+</body>
+</html>

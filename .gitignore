@@ -1,4 +1,4 @@
-# Python
+# Python & Caches
 __pycache__/
 *.py[cod]
 *$py.class
@@ -17,7 +17,14 @@ env/
 ENV/
 *.venv
 
-# ChromaDB persistent storage & cache
+# SQLite Database Files
+*.db
+query_cache.db
+chat_history.db
+test_cache.db
+test_history.db
+
+# ChromaDB persistent storage & vector indexes
 chroma_db/
 chroma_db*/
 *.chroma*
@@ -26,22 +33,19 @@ chroma_db*/
 .env
 .env.local
 
-# Scratch & logs
-scratch/
+# Logs & temporary files
 *.log
+rag_pipeline.log
+scratch/
 *.tmp
+test_files/
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# OS
+.gemini/
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Data directory temporary files
-test_files/
-
+PROJECT_GUIDE
