@@ -1,11 +1,22 @@
 # src/reranker.py
-# Cross-Encoder Reranker using BAAI/bge-reranker-base (configured for CPU execution).
+# Cross-Encoder Reranker using BAAI/bge-reranker-base (configured for CPU execution with Singleton Caching).
 
 import time
 from sentence_transformers import CrossEncoder
 from src.logger import get_logger
 
 logger = get_logger("Reranker")
+
+_reranker_instance = None
+
+def get_reranker(model_name="BAAI/bge-reranker-base"):
+    """
+    Singleton getter: Loads CrossEncoder model weights EXACTLY ONCE into memory.
+    """
+    global _reranker_instance
+    if _reranker_instance is None:
+        _reranker_instance = Reranker(model_name=model_name)
+    return _reranker_instance
 
 class Reranker:
     def __init__(self, model_name="BAAI/bge-reranker-base"):
@@ -18,7 +29,7 @@ class Reranker:
             logger.error(f"[RERANKER INIT] Failed to load model '{model_name}': {e}. Falling back to ms-marco-MiniLM-L-6-v2.")
             self.model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", device="cpu")
 
-    def rerank(self, query, chunks, top_n=4, score_threshold=0.0):
+    def rerank(self, query, chunks, top_n=4, score_threshold=-2.0):
         """
         Reranks candidate document chunks based on joint query relevance.
         Runs 100% on CPU.

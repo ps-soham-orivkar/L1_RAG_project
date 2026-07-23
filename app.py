@@ -16,24 +16,28 @@ from pydantic import BaseModel
 from src.chatbot import generate_rag_response
 from src.tools import route_query_to_tool, mcp_registry
 from src.data_processor import load_documents_from_directory, chunk_documents
-from src.retriever import HybridRetriever
-from src.evaluator import run_full_evaluation
+from src.retriever import get_retriever
 from src.logger import get_logger
 from src.cache_manager import ResponseCache
 from src.history_manager import ChatHistoryManager
 from langchain_community.document_loaders import PyMuPDFLoader
+from src.evaluator import run_full_evaluation
+
 
 logger = get_logger("App")
 
 CHROMA_DIR = "./chroma_db"
 
-# Initialize Global Components
-retriever = HybridRetriever(persist_directory=CHROMA_DIR, embedding_model="BAAI/bge-base-en-v1.5")
+# Lazy Global Singleton Component Accessors
+def get_app_retriever():
+    return get_retriever(persist_directory=CHROMA_DIR, embedding_model="BAAI/bge-base-en-v1.5")
+
 cache_manager = ResponseCache()
 history_manager = ChatHistoryManager()
 
 def init_knowledge_base():
     """Load preloaded documents from the data directory on startup ONLY if database is empty."""
+    retriever = get_app_retriever()
     if retriever.vector_store is not None and len(retriever.documents) > 0:
         logger.info(f"Loaded {len(retriever.documents)} chunks from persistent vector database. Skipping re-chunking and re-embedding.")
         return
@@ -44,10 +48,16 @@ def init_knowledge_base():
         retriever.ingest_documents(chunks)
         logger.info(f"Ingested {len(chunks)} chunks into new vector database on startup.")
 
-init_knowledge_base()
+from contextlib import asynccontextmanager
 
-# Create FastAPI app
-app = FastAPI(title="Policy AI Premium Assistant")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI Lifespan handler: Runs initialization ONCE when web server worker process starts."""
+    init_knowledge_base()
+    yield
+
+# Create FastAPI app with lifespan handler
+app = FastAPI(title="Policy AI Premium Assistant", lifespan=lifespan)
 
 class ChatRequest(BaseModel):
     message: str
@@ -93,7 +103,8 @@ def api_chat_stream(req: ChatRequest):
     history_manager.add_message(session_id, "user", message)
 
     def event_generator():
-        # 2. Check Intent Router / Direct Tools FIRST (0s latency)
+        # 2. Check Agentic Tools & Intent Routing
+        retriever = get_app_retriever()
         tool_response = route_query_to_tool(message, retriever)
         if tool_response:
             full_tool_ans = ""
@@ -181,6 +192,8 @@ def api_chat(req: ChatRequest):
 
     history_manager.add_message(session_id, "user", message)
 
+    retriever = get_app_retriever()
+
     # Check cache
     tool_response = route_query_to_tool(message, retriever)
     if tool_response:
@@ -253,12 +266,14 @@ async def api_upload(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     try:
+        from langchain_community.document_loaders import PyMuPDFLoader
         loader = PyMuPDFLoader(file_path)
         docs = loader.load()
         for doc in docs:
             doc.metadata['source_name'] = file.filename
             
         chunks = chunk_documents(docs)
+        retriever = get_app_retriever()
         retriever.ingest_documents(chunks)
         
         # Clear cache when documents change
@@ -274,6 +289,7 @@ async def api_upload(file: UploadFile = File(...)):
 def api_refresh_kb():
     """Clears persistent vector DB, removes PDF policy documents, and invalidates cache."""
     try:
+        retriever = get_app_retriever()
         retriever.reset_index()
         cleared_count = cache_manager.clear()
         
@@ -326,17 +342,23 @@ def api_cache_stats():
 
 @app.get("/api/docs")
 def api_docs():
-    """Returns list of active PDF policy documents."""
+    """Returns list of active PDF policy documents in Knowledge Base."""
     data_dir = "data"
     docs = []
     if os.path.exists(data_dir):
         for fname in os.listdir(data_dir):
             if fname.endswith(".pdf"):
                 fpath = os.path.join(data_dir, fname)
-                size_mb = os.path.getsize(fpath) / (1024 * 1024)
+                try:
+                    size_mb = os.path.getsize(fpath) / (1024 * 1024)
+                    pages = len(PyMuPDFLoader(fpath).load()) if os.path.exists(fpath) else 1
+                except Exception as e:
+                    logger.warning(f"Could not count pages for {fname}: {e}")
+                    pages = 1
+                    size_mb = 0.1
                 docs.append({
                     "name": fname,
-                    "pages": len(PyMuPDFLoader(fpath).load()) if os.path.exists(fpath) else 1,
+                    "pages": pages,
                     "size": f"{size_mb:.1f} MB"
                 })
     return docs

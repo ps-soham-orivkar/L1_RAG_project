@@ -4,10 +4,6 @@
 import json
 import os
 import time
-import numpy as np
-from src.data_processor import load_documents_from_directory, chunk_documents
-from src.chatbot import generate_rag_response
-from src.tools import route_query_to_tool
 from src.logger import get_logger
 
 logger = get_logger("Evaluator")
@@ -79,13 +75,13 @@ def run_full_evaluation():
     with open(dataset_path, "r", encoding="utf-8") as f:
         dataset = json.load(f)
 
-    # Initialize Retriever with BAAI/bge-base-en-v1.5
+    # Initialize Retriever using Singleton instance
     retriever = None
     try:
-        from src.retriever import HybridRetriever
-        retriever = HybridRetriever(persist_directory="./chroma_db", embedding_model="BAAI/bge-base-en-v1.5")
+        from src.retriever import get_retriever
+        retriever = get_retriever(persist_directory="./chroma_db", embedding_model="BAAI/bge-base-en-v1.5")
     except Exception as e:
-        logger.warning(f"Error loading persistent Chroma DB for evaluation: {e}")
+        logger.warning(f"Error accessing persistent Chroma DB for evaluation: {e}")
 
     ret_metrics = calculate_retrieval_metrics(retriever, dataset, top_k=4)
     gen_metrics = calculate_generation_metrics(retriever, dataset, top_k=4)
@@ -107,11 +103,13 @@ def run_full_evaluation():
     # Write to config/eval_results.json and root eval_results.json for compatibility
     for out_path in [EVAL_RESULTS_PATH, "eval_results.json"]:
         try:
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            dir_name = os.path.dirname(out_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not save evaluation results to {out_path}: {e}")
 
     logger.info(f"Evaluation finished successfully: {results}")
     return results

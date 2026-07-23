@@ -2,7 +2,6 @@
 # Persistent Chat History and Session Management for Policy AI Assistant.
 # Stores chat sessions and messages in SQLite DB to persist conversation history across page reloads.
 
-import os
 import json
 import time
 import uuid

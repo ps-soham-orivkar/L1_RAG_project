@@ -9,10 +9,20 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from rank_bm25 import BM25Okapi
-from src.reranker import Reranker
 from src.logger import get_logger
 
 logger = get_logger("Retriever")
+
+_retriever_instance = None
+
+def get_retriever(persist_directory="./chroma_db", embedding_model="BAAI/bge-base-en-v1.5"):
+    """
+    Singleton getter: Ensures embedding model and vector DB are initialized EXACTLY ONCE.
+    """
+    global _retriever_instance
+    if _retriever_instance is None:
+        _retriever_instance = HybridRetriever(persist_directory=persist_directory, embedding_model=embedding_model)
+    return _retriever_instance
 
 class HybridRetriever:
     def __init__(self, persist_directory="./chroma_db", embedding_model="BAAI/bge-base-en-v1.5"):
@@ -50,8 +60,9 @@ class HybridRetriever:
                 self.documents = []
                 self.bm25 = None
 
-        # Initialize High-Accuracy Cross-Encoder Reranker
-        self.reranker = Reranker(model_name="BAAI/bge-reranker-base")
+        # Initialize High-Accuracy Cross-Encoder Reranker Singleton
+        from src.reranker import get_reranker
+        self.reranker = get_reranker(model_name="BAAI/bge-reranker-base")
         
     def reset_index(self):
         """
